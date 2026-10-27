@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Layout, Button, theme, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Layout, Button, theme, message, Avatar } from 'antd';
+import { PlusOutlined, UserOutlined, RobotOutlined } from '@ant-design/icons';
 import { Bubble, Sender } from '@ant-design/x';
 
 const { Sider, Content } = Layout;
@@ -102,7 +102,12 @@ const App: React.FC = () => {
     <Layout style={{ height: '100vh', background: colorBgContainer }}>
       <Sider width={260} style={{ background: '#f9f9f9', borderRight: '1px solid #eee' }}>
         <div style={{ padding: '16px' }}>
-          <Button type="primary" icon={<PlusOutlined />} block>
+          <Button type="primary" icon={<PlusOutlined />} block onClick={() => {
+            setMessages([{
+              id: Date.now().toString(), role: 'assistant', content: '你好！我是你的AI助手。'
+            }]);
+            setInput('');
+          }}>
             新建对话
           </Button>
         </div>
@@ -120,6 +125,15 @@ const App: React.FC = () => {
                 key: msg.id,
                 role: msg.role,
                 content: msg.content,
+                avatar: (
+                  <Avatar
+                    icon={msg.role === 'user' ? <UserOutlined /> : <RobotOutlined />}
+                    style={{
+                      backgroundColor: msg.role === 'user' ? '#1890ff' : '#52c41a'
+                    }}
+                  />
+                ),
+                placement: msg.role === 'user' ? 'end' : 'start',
                 loading: loading && msg.id === messages[messages.length - 1].id && msg.content === '' // 最后一条 AI 消息显示加载中
               }))}
             />
