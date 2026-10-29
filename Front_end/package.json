@@ -12,6 +12,7 @@
   "dependencies": {
     "@ant-design/x": "^2.9.0",
     "antd": "^6.6.8",
+    "axios": "^1.21.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
