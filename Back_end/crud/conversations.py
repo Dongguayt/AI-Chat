@@ -23,3 +23,17 @@ async def get_messages_by_conv_id(db: AsyncSession, conversation_id: int):
     result = await db.execute(stmt)
     return result.scalars().all()
 
+async def get_conversation_by_id(db: AsyncSession, conversation_id: int):
+    """根据 ID 获取会话"""
+    stmt = select(Conversation).where(Conversation.id == conversation_id)
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none()
+
+async def update_conversation_title(db: AsyncSession, conversation_id: int, new_title: str):
+    """更新会话标题"""
+    conv=await get_conversation_by_id(db, conversation_id)
+    if conv:
+        conv.title = new_title
+        db.add(conv)
+        await db.flush()
+    return conv
