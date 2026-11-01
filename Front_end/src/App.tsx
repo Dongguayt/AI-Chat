@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Layout, message as antMessage } from 'antd';
 import Sidebar from '@/components/Sidebar';//侧边栏
 import ChatArea from '@/components/ChatArea';//聊天区域
 import { type Conversation, type MsgType } from '@/types';
 import { getConversations, createConversation, getMessages } from '@/api/chat';
+import 'github-markdown-css/github-markdown.css';//样式库（表格 代码块）
 
 const App: React.FC = () => {
   // === 状态管理（只管数据） ===
@@ -14,6 +15,7 @@ const App: React.FC = () => {
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // === 业务逻辑（调后端API） ===
   useEffect(() => {
@@ -61,12 +63,22 @@ const App: React.FC = () => {
     setMessages((prev) => [...prev, userMsg, aiMsg]);
     setLoading(true);
 
+    abortControllerRef.current = new AbortController();//每次发请求前，创建一个新的 AbortController
+
     try {
       const response = await fetch('http://127.0.0.1:8000/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversation_id: activeConvId, content: text })
+        body: JSON.stringify({ conversation_id: activeConvId, content: text }),
+        signal: abortControllerRef.current.signal//把信号传递给fetch
       });
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error("Too Many Requests");
+        }
+        throw new Error("网络请求失败");
+      }
 
       if (!response.body) throw new Error('没有响应体');
       const reader = response.body.getReader();
@@ -96,16 +108,33 @@ const App: React.FC = () => {
           }
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('请求失败', error);
-      antMessage.error('连接后端失败');
+      if (error.message === "Too Many Requests") {
+        antMessage.warning('请求太频繁了，请 1 分钟后再试！');
+      } else if (error.name === 'AbortError') {
+        console.log('用户停止了生成');
+      } else {
+        antMessage.error('连接后端失败，请检查后端是否启动');
+      }
+
+      //把刚才乐观更新加进去的 userMsg 和空的 aiMsg 过滤掉
+      setMessages((prev) => prev.filter((msg) => msg.id !== userMsg.id && msg.id !== aiMsgId));
+
     } finally {
       setLoading(false);
-      fetchConversations(); // 刷新列表（等待后端改成第一句话的标题）
+      abortControllerRef.current = null; // 清空
     }
   };
 
-  // === 渲染视图（极度清爽） ===
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setLoading(false);
+    }
+  };
+
+  // === 渲染视图 ===
   return (
     <Layout style={{ height: '100vh' }}>
       <Sidebar
@@ -122,6 +151,7 @@ const App: React.FC = () => {
         input={input}
         onInputChange={setInput}
         onSend={handleSend}
+        onStop={handleStop}
       />
     </Layout>
   );

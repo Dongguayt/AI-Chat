@@ -5,3 +5,4 @@ aiomysql
 cryptography
 openai
 python-dotenv
+redis

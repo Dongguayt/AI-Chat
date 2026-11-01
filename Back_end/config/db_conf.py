@@ -32,9 +32,7 @@ async def get_db():
 
 #建表
 async def create_tables():
-    # 重点：必须在这里导入所有的模型，否则 Base 不知道要建哪些表
-    from models import chat
     async with async_engine.begin() as conn:
         # 这里的 run_sync 是在异步环境中执行同步的 SQLAlchemy 操作
         await conn.run_sync(Base.metadata.create_all)
-    print("数据库表初始化完成！")
+    # print("数据库表初始化完成！")
