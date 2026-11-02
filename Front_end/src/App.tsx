@@ -5,6 +5,8 @@ import ChatArea from '@/components/ChatArea';//聊天区域
 import { type Conversation, type MsgType } from '@/types';
 import { getConversations, createConversation, getMessages } from '@/api/chat';
 import 'github-markdown-css/github-markdown.css';//样式库（表格 代码块）
+import axios from 'axios'
+
 
 const App: React.FC = () => {
   // === 状态管理（只管数据） ===
@@ -44,7 +46,7 @@ const App: React.FC = () => {
   const handleNewChat = async () => {
     try {
       const newConv = await createConversation();
-      await fetchConversations();
+      setConversations((prev) => [newConv, ...prev]);
       setActiveConvId(newConv.id);
       setMessages([{ id: Date.now().toString(), role: 'assistant', content: '你好！我是你的AI助手。' }]);
     } catch (error) {
@@ -118,12 +120,20 @@ const App: React.FC = () => {
         antMessage.error('连接后端失败，请检查后端是否启动');
       }
 
-      //把刚才乐观更新加进去的 userMsg 和空的 aiMsg 过滤掉
+      //把乐观更新加进去的 userMsg 和空的 aiMsg 过滤掉
       setMessages((prev) => prev.filter((msg) => msg.id !== userMsg.id && msg.id !== aiMsgId));
 
     } finally {
       setLoading(false);
       abortControllerRef.current = null; // 清空
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === activeConvId && c.title === '新对话'
+            ? { ...c, title: text.slice(0, 10) + (text.length > 10 ? '...' : '') }
+            : c
+        )
+      );
+      fetchConversations();
     }
   };
 
@@ -131,6 +141,31 @@ const App: React.FC = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       setLoading(false);
+    }
+  };
+
+  const handleRename = async (id: number, title: string) => {
+    try {
+      await axios.put(`http://127.0.0.1:8000/api/conversations/${id}`, { title });
+      antMessage.success('重命名成功');
+      fetchConversations(); // 刷新左侧列表
+    } catch (error) {
+      antMessage.error('重命名失败');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/conversations/${id}`);
+      antMessage.success('删除成功');
+      fetchConversations(); // 刷新左侧列表
+      if (activeConvId === id) {
+        // 如果删除的是当前正在看的会话，清空右侧
+        setActiveConvId(null);
+        setMessages([]);
+      }
+    } catch (error) {
+      antMessage.error('删除失败');
     }
   };
 
@@ -142,6 +177,8 @@ const App: React.FC = () => {
         activeConvId={activeConvId}
         onSelect={handleSelectConv}
         onNew={handleNewChat}
+        onRename={handleRename}
+        onDelete={handleDelete}
       />
 
       {/* 把数据和事件通过 props 传给右侧聊天区 */}

@@ -2,9 +2,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import crud.messages as crud
 from config.LLM_API import DEEPSEEK_API_KEY
 from openai import AsyncOpenAI
-from crud.conversations import get_conversation_by_id, update_conversation_title, get_messages_by_conv_id
+from crud.conversations import get_conversation_by_id, update_conversation_title, get_messages_by_conv_id, \
+    update_conversation_update_time
 from cache.chat_cache import get_context_from_cache, set_context_to_cache
 import redis.asyncio as aioredis
+from prompts.chat_prompts import CHAT_SYSTEM_PROMPT
+import asyncio
 
 client = AsyncOpenAI(
     api_key=DEEPSEEK_API_KEY,
@@ -15,8 +18,11 @@ client = AsyncOpenAI(
 async def ai_stream(conversation_id: int, user_content: str, db: AsyncSession, r: aioredis.Redis):
     #1. 存用户消息
     await crud.create_message(db, conversation_id, "user", user_content)
-    #2.如果是新会话，更新会话标题为用户输入的内容
+
+    #2.如果是新会话，更新会话标题为用户输入的内容以及更新时间戳
     conv=await get_conversation_by_id(db, conversation_id)
+    if conv:
+        await update_conversation_update_time(db, conv)
     if conv and conv.title =='新对话':
         await update_conversation_title(db, conversation_id, user_content[:10])
 
@@ -31,6 +37,13 @@ async def ai_stream(conversation_id: int, user_content: str, db: AsyncSession, r
         history_msg = await get_messages_by_conv_id(db, conversation_id)
         messages = [{"role": msg.role, "content": msg.content} for msg in history_msg]
 
+    system_msg = {"role": "system", "content": CHAT_SYSTEM_PROMPT}
+    if not any(m["role"] == "system" for m in messages):
+        messages.insert(0, system_msg) # 插到最前面
+    else:
+        messages[0] = system_msg # 如果缓存里已经有旧的 system，直接覆盖掉
+
+    # print(messages[0]["content"])
 
     #4.调用模型，获取流式回复
     full_ai_reply=""
@@ -49,6 +62,10 @@ async def ai_stream(conversation_id: int, user_content: str, db: AsyncSession, r
                 full_ai_reply += content
                 # 按照 SSE 格式发给前端
                 yield f"data: {content}\n\n"
+    # 处理用户点击停止生成的情况
+    except asyncio.CancelledError:
+        print("用户点击了停止生成，已拦截大模型请求")
+        return
     except Exception as e:
         print(f"大模型调用失败: {e}")
         yield f"data: [ERROR] 大模型服务异常\n\n"

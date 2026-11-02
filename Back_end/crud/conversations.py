@@ -1,11 +1,12 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from models.chat import Conversation, Message
+from datetime import datetime
 
 
 async def get_conversations(db:AsyncSession):
-    """获取所有对话 按创建时间降序排序"""
-    stmt=select(Conversation).order_by(Conversation.create_time.desc())
+    """获取所有对话 按更新时间降序排序"""
+    stmt=select(Conversation).order_by(Conversation.update_time.desc())
     results = await db.execute(stmt)
     return results.scalars().all()
 
@@ -36,4 +37,14 @@ async def update_conversation_title(db: AsyncSession, conversation_id: int, new_
         conv.title = new_title
         db.add(conv)
         await db.flush()
+        await db.refresh(conv)
     return conv
+
+async def delete_conversation(db: AsyncSession, conv: Conversation):
+    """删除会话"""
+    await db.delete(conv)
+    await db.commit()
+
+async def update_conversation_update_time(db: AsyncSession, conv: Conversation):
+    conv.update_time = datetime.now()
+    db.add(conv)

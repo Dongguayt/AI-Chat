@@ -2,6 +2,7 @@ export interface Conversation {
     id: number;
     title: string;
     create_time: string;
+    update_time: string;
 }
 
 export interface MsgType {
