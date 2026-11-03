@@ -1,34 +1,28 @@
-import axios from 'axios';
-import { type Conversation } from '@/types/index';
-
-const BASE_URL = 'http://127.0.0.1:8000/api';
+import request from '@/api/request';
+import { type Conversation, type MsgType } from '@/types';
 
 // 1. 获取会话列表
 export const getConversations = async () => {
-    const res = await axios.get<Conversation[]>(`${BASE_URL}/conversations/`);
-    return res.data;
+    // 因为 request.ts 拦截器里 return 了 response.data，这里直接拿数据
+    return await request.get<any, Conversation[]>('/conversations/');
 };
 
 // 2. 新建会话
-export const createConversation = async (title: string = '新对话') => {
-    const res = await axios.post<Conversation>(`${BASE_URL}/conversations/`, { title });
-    return res.data;
+export const createConversation = async () => {
+    return await request.post<any, Conversation>('/conversations/', { title: '新对话' });
 };
 
 // 3. 获取历史消息
 export const getMessages = async (conversationId: number) => {
-    const res = await axios.get(`${BASE_URL}/conversations/${conversationId}/messages`);
-    return res.data;
+    return await request.get<any, MsgType[]>(`/conversations/${conversationId}/messages`);
 };
 
-//4. 重命名会话
+// 4.重命名
 export const renameConversation = async (id: number, title: string) => {
-    const res = await axios.put<Conversation>(`${BASE_URL}/conversations/${id}`, { title });
-    return res.data;
+    return await request.put(`/conversations/${id}`, { title });
 };
 
 // 5. 删除会话
 export const deleteConversation = async (id: number) => {
-    const res = await axios.delete(`${BASE_URL}/conversations/${id}`);
-    return res.data;
+    return await request.delete(`/conversations/${id}`);
 };

@@ -25,9 +25,10 @@ const App: React.FC = () => {
   const fetchConversations = async () => {
     try {
       const data = await getConversations();
-      setConversations(data);
+      setConversations(data || []);
     } catch (error) {
-      antMessage.error('获取会话列表失败');
+      console.log('获取列表失败');
+      setConversations([]);
     }
   };
 
@@ -35,9 +36,9 @@ const App: React.FC = () => {
     setActiveConvId(id);
     try {
       const historyMsgs = await getMessages(id);
-      setMessages(historyMsgs);
+      setMessages(historyMsgs || []);
     } catch (error) {
-      antMessage.error('获取历史消息失败');
+      console.log('获取历史消息失败');
     }
   };
 
@@ -48,7 +49,7 @@ const App: React.FC = () => {
       setActiveConvId(newConv.id);
       setMessages([{ id: Date.now().toString(), role: 'assistant', content: '你好！我是你的AI助手。' }]);
     } catch (error) {
-      antMessage.error('新建会话失败');
+      console.log('新会话失败');
     }
   };
 
@@ -148,7 +149,7 @@ const App: React.FC = () => {
       antMessage.success('重命名成功');
       fetchConversations(); // 刷新左侧列表
     } catch (error) {
-      antMessage.error('重命名失败');
+      console.log('重命名失败');
     }
   };
 
@@ -163,7 +164,7 @@ const App: React.FC = () => {
         setMessages([]);
       }
     } catch (error) {
-      antMessage.error('删除失败');
+      console.log('删除失败');
     }
   };
 
