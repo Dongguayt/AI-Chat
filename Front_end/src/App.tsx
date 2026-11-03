@@ -3,10 +3,8 @@ import { Layout, message as antMessage } from 'antd';
 import Sidebar from '@/components/Sidebar';//侧边栏
 import ChatArea from '@/components/ChatArea';//聊天区域
 import { type Conversation, type MsgType } from '@/types';
-import { getConversations, createConversation, getMessages } from '@/api/chat';
+import { getConversations, createConversation, getMessages, renameConversation, deleteConversation } from '@/api/chat';
 import 'github-markdown-css/github-markdown.css';//样式库（表格 代码块）
-import axios from 'axios'
-
 
 const App: React.FC = () => {
   // === 状态管理（只管数据） ===
@@ -146,7 +144,7 @@ const App: React.FC = () => {
 
   const handleRename = async (id: number, title: string) => {
     try {
-      await axios.put(`http://127.0.0.1:8000/api/conversations/${id}`, { title });
+      await renameConversation(id, title);
       antMessage.success('重命名成功');
       fetchConversations(); // 刷新左侧列表
     } catch (error) {
@@ -156,7 +154,7 @@ const App: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/conversations/${id}`);
+      await deleteConversation(id);
       antMessage.success('删除成功');
       fetchConversations(); // 刷新左侧列表
       if (activeConvId === id) {

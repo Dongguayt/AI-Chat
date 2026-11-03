@@ -20,3 +20,15 @@ export const getMessages = async (conversationId: number) => {
     const res = await axios.get(`${BASE_URL}/conversations/${conversationId}/messages`);
     return res.data;
 };
+
+//4. 重命名会话
+export const renameConversation = async (id: number, title: string) => {
+    const res = await axios.put<Conversation>(`${BASE_URL}/conversations/${id}`, { title });
+    return res.data;
+};
+
+// 5. 删除会话
+export const deleteConversation = async (id: number) => {
+    const res = await axios.delete(`${BASE_URL}/conversations/${id}`);
+    return res.data;
+};

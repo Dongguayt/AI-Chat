@@ -4,6 +4,7 @@ from routers import chat,conversations
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from config.db_conf import create_tables
+from utils.exception_handlers import register_exception_handlers
 
 
 @asynccontextmanager
@@ -16,6 +17,9 @@ async def lifespan(app: FastAPI):
     print("服务器关闭。")
 
 app = FastAPI(lifespan=lifespan)
+
+# 注册异常处理函数
+register_exception_handlers(app)
 
 # 允许跨域
 app.add_middleware(
