@@ -14,9 +14,9 @@
 
 ## 🛠️ 技术栈
 
-**前端**：React 18, TypeScript, Vite, Ant Design & Ant Design X, React-Markdown, Axios
-**后端**：Python 3.11, FastAPI, SQLAlchemy 2.0 (异步), AsyncOpenAI, Redis
-**数据库**：MySQL 8.0, Redis 7.0
+- **前端**：React 18, TypeScript, Vite, Ant Design & Ant Design X, React-Markdown, Axios
+- **后端**：Python 3.11, FastAPI, SQLAlchemy 2.0 (异步), AsyncOpenAI, Redis
+- **数据库**：MySQL 8.0.46, Redis 7.4.12
 
 ## 📁 项目结构
 
@@ -44,7 +44,32 @@ AI-Chat/
 
 ![界面预览](./assets/image.png)
 
-## 🚀 快速开始 (本地运行)
+## 🚀 快速开始
+
+### 方式一：Docker 一键部署（推荐）
+
+如果你安装了 Docker Desktop，只需两步即可拉起完整的前后端及数据库环境。
+
+**1. 克隆项目并进入目录**
+```bash
+git clone https://github.com/Dongguayt/AI-Chat.git
+cd AI-Chat
+```
+
+**2. 配置环境变量**
+在项目根目录新建 `.env` 文件，填入你的大模型 API Key：
+```env
+DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxxxxx
+```
+
+**3. 启动容器**
+在项目根目录执行：
+```bash
+docker compose up -d --build
+```
+等待服务启动完成后，访问 http://localhost 即可体验。
+
+### 方式二：本地开发运行
 
 ### 1. 克隆项目
 ```bash
@@ -52,8 +77,8 @@ git clone https://github.com/Dongguayt/AI-Chat.git
 cd AI-Chat
 ```
 ### 2. 数据库与中间件准备
-**启动本地 MySQL 和 Redis。**
-**在 MySQL 中创建数据库 aichat_db，并执行 Back_end/database/database.sql 导入表结构。**
+- **启动本地 MySQL 和 Redis。**
+- **在 MySQL 中创建数据库 aichat_db，并执行 Back_end/database/database.sql 导入表结构。**
 
 ### 3. 后端启动
 ```bash

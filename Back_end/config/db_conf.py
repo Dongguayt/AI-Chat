@@ -1,7 +1,14 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from models.base import Base
+import os
 
-ASYNC_DATABASE_URL = "mysql+aiomysql://root:123456@localhost:3306/aichat_db?charset=utf8"
+# 💡 如果环境变量里没有 MYSQL_HOST，默认用 127.0.0.1（本地开发）
+DB_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
+DB_PORT = os.getenv("MYSQL_PORT", "3306")
+DB_USER = os.getenv("MYSQL_USER", "root")
+DB_PASS = os.getenv("MYSQL_PASSWORD", "123456")
+
+ASYNC_DATABASE_URL = f"mysql+aiomysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/aichat_db?charset=utf8"
 
 #创建异步引擎
 async_engine = create_async_engine(

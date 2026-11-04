@@ -67,7 +67,7 @@ const App: React.FC = () => {
     abortControllerRef.current = new AbortController();//每次发请求前，创建一个新的 AbortController
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/chat/stream', {
+      const response = await fetch('/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conversation_id: activeConvId, content: text }),

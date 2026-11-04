@@ -1,7 +1,10 @@
 import redis.asyncio as aioredis
 from redis.asyncio import ConnectionPool
+import os
 
-REDIS_URL = "redis://127.0.0.1:6379/0"
+REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1")
+REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
 
 # 创建异步连接池
 redis_pool = ConnectionPool.from_url(
